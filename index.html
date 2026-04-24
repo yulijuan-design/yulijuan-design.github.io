@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>于丽娟的个人作品集 | UI体验设计师</title>
+    
+    <!-- Scripts & Fonts -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@11/dist/framer-motion.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Grape+Nuts&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --font-sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+            --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+            --color-ink: #1a1a1a;
+            --color-pill-orange: #FF5722;
+            --color-pill-blue: #2196F3;
+            --color-pill-green: #4CAF50;
+        }
+
+        body {
+            background-color: #fcfcfc;
+            color: var(--color-ink);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+        }
+
+        .hand-note {
+            font-family: 'Grape Nuts', cursive !important;
+        }
+        
+        .font-space-mono {
+            font-family: 'Space Mono', monospace !important;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .pill-highlight {
+            position: relative;
+            display: inline-block;
+            padding: 0 0.5rem;
+            z-index: 1;
+        }
+        
+        .pill-highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0.1em;
+            left: 0;
+            width: 100%;
+            height: 0.4em;
+            background: currentColor;
+            opacity: 0.15;
+            border-radius: 9999px;
+            z-index: -1;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin 10s linear infinite;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#1a1a1a',
+                        'pill-orange': '#FF5722',
+                        'pill-blue': '#2196F3',
+                        'pill-green': '#4CAF50',
+                    },
+                    fontFamily: {
+                        sans: ["Space Grotesk", "Inter", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const { motion, AnimatePresence, useScroll, useSpring, useMotionValue, animate, useInView } = Motion;
+
+        // --- Icons (Manually Defined SVG Components) ---
+        const ArrowUpRight = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <line x1="7" y1="17" x2="17" y2="7"></line>
+                <polyline points="7 7 17 7 17 17"></polyline>
+            </svg>
+        );
+
+        const CheckCircle2 = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+            </svg>
+        );
+
+        const XiaoHongShuIcon = ({ size = 20, className = '' }) => (
+            <svg className={className} viewBox="0 0 1024 1024" version="1.1" width={size} height={size}>
+                <path d="M428.509867 128H284.672L174.216533 352.187733s-33.3824 71.406933 33.450667 71.406934H284.672L210.193067 586.205867s-23.1424 61.576533 51.336533 61.576533h166.980267l33.450666-108.407467H361.6768l112.981333-224.119466-136.123733-4.983467 89.9072-182.272zM176.810667 697.070933h231.150933l-56.5248 134.894934H128l48.810667-134.894934z m349.320533-529.681066h321.058133v133.12H526.1312v-133.12z m89.9072 133.12h141.312v416.221866h-141.312V300.4416z m-131.072 416.221866h411.0336v115.234134H418.269867l66.7648-115.234134z" fill="currentColor"></path>
+            </svg>
+        );
+
+        const EmailIcon = ({ size = 20, className = '' }) => (
+            <svg className={className} viewBox="0 0 1024 1024" width={size} height={size}>
+                <path d="M846.848 895.488H177.152c-71.168 0-128.512-57.856-128.512-128.512V257.024c0-71.168 57.856-128.512 128.512-128.512h669.184c71.168 0 128.512 57.856 128.512 128.512v509.952c0.512 70.656-57.344 128.512-128 128.512zM177.152 202.24c-30.208 0-54.784 24.576-54.784 54.784v509.952c0 30.208 24.576 54.784 54.784 54.784h669.184c30.208 0 54.784-24.576 54.784-54.784V257.024c0-30.208-24.576-54.784-54.784-54.784H177.152z" fill="currentColor"></path>
+                <path d="M473.6 485.376L190.464 202.24h-13.312c-25.088 0-46.592 16.896-52.736 40.448l295.936 295.936c25.088 25.088 58.368 37.888 91.136 37.888s66.048-12.8 91.136-37.888l295.936-295.936c-6.144-23.04-27.648-40.448-52.736-40.448h-13.312l-283.136 283.136c-19.968 21.504-54.272 21.504-75.776 0z" fill="currentColor"></path>
+            </svg>
+        );
+
+        const PhoneIcon = ({ size = 20, className = '' }) => (
+            <svg className={className} viewBox="0 0 1024 1024" width={size} height={size}>
+                <path d="M446.272 573.44a509.653333 509.653333 0 0 1-81.92-100.650667c67.786667-30.474667 112.138667-93.461333 112.138667-169.792C476.48 194.592 388.96 106.666667 280.906667 106.666667 170.058667 106.666667 85.333333 188.746667 85.333333 302.997333c0 158.250667 82.56 328.554667 200.618667 439.658667 100.010667 94.122667 258.986667 161.738667 413.461333 174.570667 0.832 0.074667 1.674667 0.106667 2.517334 0.106666h41.162666a30.517333 30.517333 0 0 0 0-61.045333h-39.872c-140.672-11.978667-286.026667-73.930667-375.456-158.090667-106.410667-100.16-181.408-254.837333-181.408-395.2 0-80.106667 56.981333-135.285333 134.549334-135.285333 74.282667 0 134.549333 60.533333 134.549333 135.285333 0 60.309333-40.896 107.989333-103.008 123.349334a30.517333 30.517333 0 0 0-19.786667 43.658666c27.573333 53.312 66.037333 104.426667 111.573334 147.690667 51.264 48.693333 109.941333 86.112 172.053333 108.16a30.506667 30.506667 0 0 0 40.362667-24.064c10.453333-67.093333 61.621333-114.026667 126.442666-114.026667 74.272 0 134.549333 60.544 134.549334 135.285334 0 25.578667-7.04 50.026667-20.149334 71.253333a30.528 30.528 0 0 0 51.925334 32.074667A196.096 196.096 0 0 0 938.666667 723.050667c0-108.394667-87.530667-196.330667-195.573334-196.330667-83.072 0-151.210667 52.384-177.621333 128.864-42.368-19.552-82.773333-47.541333-119.2-82.144z" fill="currentColor"></path>
+            </svg>
+        );
+
+        const WeChatIcon = ({ size = 20, className = '' }) => (
+            <svg className={className} viewBox="0 0 1024 1024" width={size} height={size}>
+                <path d="M767.818667 409.173333C867.338667 444.266667 938.666667 539.136 938.666667 650.666667c0 42.709333-10.496 83.978667-30.261334 120.842666-1.792 3.338667-4.992 8.928-9.696 16.96l14.613334 53.557334c6.506667 23.893333-15.402667 45.813333-39.296 39.296l-53.642667-14.634667-6.229333 3.669333A254.933333 254.933333 0 0 1 682.666667 906.666667c-77.994667 0-147.84-34.88-194.805334-89.888a352.608 352.608 0 0 1-56.64 4.554666c-63.338667 0-124.266667-16.853333-177.472-48.298666-1.834667-1.088-6.410667-3.733333-13.632-7.893334l-80.544 21.653334c-23.914667 6.432-45.76-15.573333-39.146666-39.434667l21.792-78.752a961.205333 961.205333 0 0 1-15.904-27.317333A336.384 336.384 0 0 1 85.333333 480c0-188.618667 154.965333-341.333333 345.888-341.333333 159.914667 0 297.984 108.010667 335.818667 259.296 0.949333 3.765333 1.173333 7.552 0.778667 11.2z m-68.106667-13.952C662.88 282.037333 555.178667 202.666667 431.221333 202.666667 275.434667 202.666667 149.333333 326.933333 149.333333 480c0 46.272 11.498667 90.837333 33.194667 130.698667 2.88 5.290667 10.176 17.706667 21.621333 36.746666a32 32 0 0 1 3.413334 25.013334l-10.517334 37.994666 39.232-10.549333a32 32 0 0 1 24.234667 3.146667c14.272 8.192 22.773333 13.098667 25.802667 14.890666A283.882667 283.882667 0 0 0 431.221333 757.333333c6.154667 0 12.288-0.192 18.389334-0.576A255.061333 255.061333 0 0 1 426.666667 650.666667c0-141.386667 114.613333-256 256-256 5.728 0 11.413333 0.192 17.045333 0.554666z m133.706667 397.056a32 32 0 0 1 3.338666-24.725333 996.672 996.672 0 0 0 15.242667-26.293333A190.997333 190.997333 0 0 0 874.666667 650.666667c0-106.037333-85.962667-192-192-192s-192 85.962667-192 192 85.962667 192 192 192a190.933333 190.933333 0 0 0 98.570666-27.2c2.208-1.322667 8.288-4.874667 18.517334-10.837334a32 32 0 0 1 24.522666-3.210666l12.565334 3.424-3.424-12.565334zM330.666667 426.666667a42.666667 42.666667 0 1 1 0-85.333334 42.666667 42.666667 0 0 1 0 85.333334z m192 0a42.666667 42.666667 0 1 1 0-85.333334 42.666667 42.666667 0 0 1 0 85.333334z m85.333333 202.666666a32 32 0 1 1 0-64 32 32 0 0 1 0 64z m149.333333 0a32 32 0 1 1 0-64 32 32 0 0 1 0 64z" fill="currentColor"></path>
+            </svg>
+        );
+
+        const StarIcon = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+                <path d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2Z" />
+            </svg>
+        );
+
+        // --- Components ---
+
+        const Navbar = () => {
+            const navItems = [
+                { label: "首页", href: "#home" },
+                { label: "项目经验", href: "#projects" },
+                { label: "工作经历", href: "#experience" }
+            ];
+            return (
+                <motion.nav 
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="fixed top-0 left-0 w-full z-50 px-4 py-4 md:px-6 md:py-6 pointer-events-none"
+                >
+                    <div className="max-w-7xl mx-auto flex items-center justify-center">
+                        <div className="flex items-center gap-4 md:gap-8 bg-white/70 backdrop-blur-md border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-4 md:px-8 py-2.5 rounded-full pointer-events-auto">
+                            {navItems.map((item) => (
+                                <a key={item.label} href={item.href} className="text-xs sm:text-sm font-medium text-ink/60 hover:text-ink transition-colors">
+                                    {item.label}
+                                </a>
+                            ))}
+                            <a href="#contact" className="text-xs sm:text-sm font-bold bg-ink text-white px-4 sm:px-5 py-2 rounded-full hover:scale-105 transition-transform shrink-0">
+                                打个招呼 👋
+                            </a>
+                        </div>
+                    </div>
+                </motion.nav>
+            );
+        };
+
+        const Hero = () => {
+            return (
+                <section id="home" className="scroll-mt-32 min-h-[40vh] flex flex-col justify-center max-w-5xl mx-auto px-6 w-full pt-28 pb-16 md:pt-36 md:pb-24 relative">
+                    <div className="relative w-full flex flex-col items-center text-center z-10">
+                        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8 }} className="absolute -top-6 md:-top-16 left-4 md:left-[10%] rotate-[-6deg] z-20">
+                            <span className="hand-note text-[16px] md:text-[34px] text-ink/40">Hi, I'm Yulijuan...</span>
+                        </motion.div>
+                        
+                        <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8, delay: 0.1 }} className="relative z-10 max-w-[936px] px-2">
+                             <h1 className="text-[22px] leading-[1.2] sm:text-[30px] md:text-[50px] lg:text-[66px] font-black md:leading-[1.1] tracking-tight text-ink z-10 relative font-space-mono font-normal">
+                                Decoding data logic, <br />
+                                delivering <br />
+                                restrained <span className="bg-pill-orange text-white rounded-[0.3em] mx-[0.1em] shadow-[0_0.15em_0.5em_rgba(255,87,34,0.4)] inline-block px-[0.4em] py-[0.05em] align-baseline mt-1 md:mt-2">aesthetics</span>.
+                            </h1>
+                        </motion.div>
+
+                        <div className="absolute top-[28%] md:top-[22%] left-[5%] md:left-[15%] w-16 h-16 md:w-32 md:h-32 z-20 opacity-40 md:opacity-60 pointer-events-none">
+                             <svg viewBox="0 0 100 100" className="w-full h-full text-pill-orange stroke-current" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M10,90 C 10,40 40,20 60,50 C 70,65 80,75 95,70" />
+                                <path d="M80,55 L95,70 L85,85" />
+                            </svg>
+                        </div>
+
+                        <div className="absolute top-[15%] md:top-[calc(10%+8px)] right-[5%] md:right-[15%] w-16 h-16 md:w-32 md:h-32 z-20 opacity-40 md:opacity-60 pointer-events-none">
+                            <svg viewBox="0 0 100 100" className="w-full h-full text-pill-blue stroke-current" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M90,10 C 80,60 60,80 40,60 C 20,40 40,20 60,30 C 80,40 70,70 50,80" />
+                                <path d="M65,75 L50,80 L55,65" />
+                            </svg>
+                        </div>
+
+                        <div className="absolute inset-0 w-full h-full pointer-events-none">
+                             <motion.div animate={{ y: [0, -15, 0] }} transition={{ duration: 6, repeat: Infinity }} className="absolute top-[-20%] sm:top-[-15%] md:top-[-10%] lg:top-[-5%] right-[-2%] md:right-[0%] lg:right-[-5%] z-30 pointer-events-auto scale-50 sm:scale-60 md:scale-75 lg:scale-100 origin-top-right">
+                                <div className="w-40 md:w-48 aspect-[3/3.5] bg-white/70 backdrop-blur-md border border-ink/5 rounded-[2rem] p-5 flex flex-col items-center justify-center rotate-[12deg] shadow-2xl shadow-ink/5 hover:rotate-0 transition-transform duration-500">
+                                   <div className="w-16 h-16 md:w-20 md:h-20 bg-pill-orange rounded-full flex items-center justify-center mb-4 shadow-inner border-[3px] border-white overflow-hidden p-0">
+                                        <img src="https://gd-hbimg-edge.huaban.com/ee171309d142e52ce68aa88cbe0086ec18c4ed4d276828-VUcypv_fw1200webp?auth_key=1777060800-a728a6bcb17b4d1fa22aa2c1e32451f5-0-e03afc2bb7873a68a0c3cbfda5cb36ca" className="w-full h-full object-cover scale-110" alt="Profile" />
+                                   </div>
+                                   <div className="text-center mt-2">
+                                     <p className="font-bold text-sm md:text-base text-ink">于丽娟</p>
+                                     <p className="text-[10px] md:text-xs text-ink/60 mt-1">UI体验设计师</p>
+                                   </div>
+                                </div>
+                             </motion.div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const MastergoProjects = ({ projects }) => {
+            const [activeIndex, setActiveIndex] = useState(0);
+            return (
+                <div className="w-full max-w-5xl mx-auto px-6 py-16 md:py-24">
+                    <div className="flex items-center justify-between md:justify-center gap-4 sm:gap-6 md:gap-16 mb-6 md:mb-8 relative z-20 overflow-x-auto pb-4 no-scrollbar w-full">
+                        {projects.map((project, idx) => {
+                            const isActive = activeIndex === idx;
+                            return (
+                                <button key={idx} onClick={() => setActiveIndex(idx)} className="group flex flex-col items-center relative outline-none flex-shrink-0">
+                                    <div className="flex items-baseline gap-1 md:gap-2">
+                                        <span className={`text-sm sm:text-base md:text-[20px] italic font-black transition-colors duration-500 ${isActive ? "text-pill-orange" : "text-ink/30 group-hover:text-ink/60"}`} style={{ fontFamily: "Verdana" }}>0{idx + 1}</span>
+                                        <span className={`text-sm sm:text-base md:text-2xl font-bold tracking-tight not-italic transition-colors duration-500 ${isActive ? "text-ink" : "text-ink/30 group-hover:text-ink/60"}`}>{project.tabName}</span>
+                                    </div>
+                                    <div className="h-[2px] md:h-[3px] bg-ink/5 w-full mt-2 md:mt-3 rounded-full overflow-hidden relative">
+                                        {isActive && <motion.div layoutId="creativeNavLine" className="absolute inset-0 bg-pill-orange rounded-full" />}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <div className="grid w-full max-w-5xl mx-auto perspective-[1200px] pb-8 md:pb-12">
+                        {projects.map((project, idx) => {
+                            const isActive = activeIndex === idx;
+                            return (
+                                <motion.div key={idx} animate={{ opacity: isActive ? 1 : 0, scale: isActive ? 1 : 0.94, y: isActive ? 0 : 30, zIndex: isActive ? 20 : 1 }} transition={{ duration: 0.7 }} className={`col-start-1 row-start-1 w-full bg-white p-5 sm:p-8 md:p-10 lg:p-16 rounded-[28px] md:rounded-[40px] shadow-2xl border border-black/[0.03] ${!isActive && 'pointer-events-none'}`}>
+                                    <div className="flex flex-col md:flex-row gap-5 md:gap-8 lg:gap-14 items-center">
+                                        <div className="w-full md:w-[45%] lg:w-[42%] flex flex-col gap-4 md:gap-6 justify-center text-left">
+                                            <div className="flex flex-wrap gap-2">
+                                                {project.tags.map(tag => <span key={tag} className="px-2.5 py-1 bg-[#f5f5f7] text-[#1a1a1a]/80 text-[10px] md:text-sm font-semibold rounded-lg">{tag}</span>)}
+                                            </div>
+                                            <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-ink leading-[1.2] whitespace-pre-wrap">{project.title}</h3>
+                                            <p className="text-xs sm:text-sm md:text-base leading-relaxed text-[#1a1a1a]/60">{project.description}</p>
+                                            <a href={project.link} target="_blank" className="px-6 py-3 bg-ink text-white rounded-full text-sm font-bold tracking-tight hover:scale-105 transition-transform flex items-center gap-2 w-fit">点击查看 <ArrowUpRight size={16} /></a>
+                                        </div>
+                                        <div className="w-full md:w-[55%] lg:w-[58%] aspect-[4/3] bg-[#f5f5f7] rounded-[20px] md:rounded-[32px] overflow-hidden shadow-lg ring-1 ring-black/5">
+                                            <img src={project.image} alt={project.tabName} className="w-full h-full object-cover" />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const StatItem = ({ number, suffix, title, subTitle, description, color, delay }) => {
+            const [displayValue, setDisplayValue] = useState(0);
+            const ref = useRef(null);
+            const isInView = useInView(ref, { once: true, margin: "-50px" });
+            useEffect(() => {
+                if (isInView) {
+                    const controls = animate(0, number, { 
+                        duration: 2, delay, ease: [0.16, 1, 0.3, 1],
+                        onUpdate: v => setDisplayValue(Math.round(v))
+                    });
+                    return () => controls.stop();
+                }
+            }, [isInView, number, delay]);
+            return (
+                <motion.div ref={ref} initial={{ opacity: 0, y: 15 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay }} className="flex flex-col items-start p-5 md:p-8 rounded-[28px] bg-white border border-black/[0.03] shadow-sm hover:shadow-xl transition-all duration-500 group">
+                    <div className="flex flex-col items-start gap-1">
+                        <div className="flex items-baseline gap-1 relative">
+                            <span className={`text-4xl md:text-5xl font-black tracking-tighter ${color}`}>{displayValue}</span>
+                            <span className={`text-lg md:text-xl font-black italic ${color}`}>{suffix}</span>
+                        </div>
+                        <div className="flex flex-col items-start mt-3">
+                            <span className="text-[14px] md:text-base font-black text-ink tracking-tight uppercase">{title}</span>
+                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-ink/20 italic">{subTitle}</span>
+                        </div>
+                    </div>
+                    <p className="text-[11px] md:text-xs leading-relaxed text-ink/50 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">{description}</p>
+                    <div className={`absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-500 ${color}`}><StarIcon /></div>
+                </motion.div>
+            );
+        };
+
+        const Experience = () => {
+             const experiences = [
+                { company: "活字招", role: "项目 & 设计负责人", period: "2025.06 — 2025.12", details: ["主导活字招新业务，搭建新媒体矩阵", "统一账号视觉体系，精准获客 200+"], color: "bg-pill-orange" },
+                { company: "Boom Ai", role: "UI 设计负责人", period: "2024.07 — 2025.06", details: ["主导 AI 文生图产品 Web 端全案设计", "转化 ComfyUI 技术流为可视化界面"], color: "bg-pill-blue" },
+                { company: "iFonts 字体助手", role: "UI 设计师", period: "2021.01 — 2024.07", details: ["主导客户端 UI/UX 迭代", "负责主站及海外站视觉规范统一"], color: "bg-pill-green" },
+                { company: "字魂网", role: "UI / 视觉设计师", period: "2019.07 — 2021.01", details: ["负责 Web 端主站及小程序界面优化与改版"], color: "bg-zinc-800" }
+            ];
+            return (
+                <div id="experience" className="scroll-mt-32 max-w-5xl mx-auto px-4 mt-12 text-left">
+                    <div className="flex flex-col gap-6 relative">
+                        <div className="absolute left-[7px] md:left-[11px] top-4 bottom-4 w-[1px] bg-ink/[0.05]" />
+                        {experiences.map((exp, i) => (
+                            <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="group flex gap-5 md:gap-8">
+                                <div className="relative mt-1.5 z-10">
+                                    <div className="w-[15px] h-[15px] md:w-[23px] md:h-[23px] rounded-full border border-ink/5 bg-white flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform"><div className={`w-full h-full rounded-full ${exp.color} opacity-80`} /></div>
+                                </div>
+                                <div className="flex-1 pb-8">
+                                    <h3 className="text-lg md:text-2xl font-black text-ink">{exp.company}</h3>
+                                    <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-ink/40">{exp.role}</span>
+                                    <span className="ml-4 text-[11px] md:text-xs font-mono text-ink/30">{exp.period}</span>
+                                    <div className="mt-4 flex flex-col gap-2">
+                                        {exp.details.map((d, j) => <p key={j} className="text-xs md:text-sm text-ink/50 leading-loose">• {d}</p>)}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const Footer = () => {
+            const [showToast, setShowToast] = useState(false);
+            const [toastMessage, setToastMessage] = useState("");
+            const handleCopy = (text, msg) => {
+                navigator.clipboard.writeText(text).then(() => {
+                    setToastMessage(msg);
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 2000);
+                });
+            };
+            const contactItems = [
+                { label: "邮箱 / Email", value: "278580303@qq.com", icon: EmailIcon, color: "text-pill-blue", bg: "bg-pill-blue/5" },
+                { label: "微信 / WeChat", value: "Doris278580303", icon: WeChatIcon, color: "text-pill-green", bg: "bg-pill-green/5" },
+                { label: "小红书 / Red", value: "设计师Doris", icon: XiaoHongShuIcon, color: "text-pill-orange", bg: "bg-pill-orange/5" },
+                { label: "电话 / Phone", value: "17720805227", icon: PhoneIcon, color: "text-zinc-800", bg: "bg-zinc-100" }
+            ];
+            return (
+                <footer id="contact" className="py-16 max-w-5xl mx-auto px-6 border-t border-ink/5">
+                    <div className="flex flex-col gap-12 text-left">
+                        <div className="flex flex-col md:flex-row justify-between gap-12">
+                             <div>
+                                <span className="px-4 py-1.5 rounded-full bg-pill-blue/10 text-pill-blue text-[10px] uppercase font-black">Available for work</span>
+                                <h2 className="text-4xl md:text-6xl font-bold mt-6">期待合作 <br/> 欢迎联系</h2>
+                             </div>
+                             <div className="flex flex-col gap-4 items-start md:items-end">
+                                <span className="hand-note text-4xl text-ink/40">Say hi! 👋</span>
+                                <p className="text-sm text-ink/60 md:text-right">逻辑的尽头是直觉，对话的开始是机遇，期待契合。</p>
+                             </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {contactItems.map(item => (
+                                <div key={item.label} onClick={() => handleCopy(item.value, `已复制${item.label.split('/')[0].trim()}，期待合作～`)} className="group p-6 rounded-[28px] bg-white border border-black/[0.03] shadow-md hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden">
+                                     <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center ${item.color}`}><item.icon size={22} /></div>
+                                     <div className="mt-4"><p className="text-[10px] uppercase font-black text-ink/30">{item.label}</p><p className="text-sm font-bold text-ink">{item.value}</p></div>
+                                     <div className="absolute top-6 right-6 opacity-20"><ArrowUpRight size={14} /></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <AnimatePresence>
+                        {showToast && (
+                            <motion.div initial={{ opacity: 0, y: 50, x: "-50%" }} animate={{ opacity: 1, y: 0, x: "-50%" }} exit={{ opacity: 0, y: 20, x: "-50%" }} className="fixed bottom-10 left-1/2 flex items-center gap-3 px-6 py-3 bg-ink text-white rounded-full shadow-2xl z-[200]">
+                                <CheckCircle2 size={18} className="text-pill-green" /><span className="text-sm font-bold">{toastMessage}</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </footer>
+            );
+        };
+
+        const App = () => {
+            const projects = [
+                { tabName: "社交APP体验升级", title: "咯吱社交APP\n全链路体验升级", subtitle: "2024", description: "该产品专为年轻人打造的社交工具，通过视觉推演打造真实同频的交互界面。", tags: ["会员体系", "体验优化"], image: "https://gd-hbimg-edge.huaban.com/728dc16e3cd1493b9f5e4d657112d5e7b377da0a289425-jnA3Qq_fw1200webp?auth_key=1777060800-a728a6bcb17b4d1fa22aa2c1e32451f5-0-241f55c57b4c113282ae774e3ea6182e", link: "#" },
+                { tabName: "字体工具小程序升级", title: "字魂小程序\n体验升级", subtitle: "2023", description: "重构视觉与交互，强化专业认知，缩短转化路径。", tags: ["流程优化", "转化提效"], image: "https://gd-hbimg-edge.huaban.com/626383726b61fce73dfeb6a8b1d9e399107651da25b8cb-9Ls2sz_fw1200webp?auth_key=1777060800-a728a6bcb17b4d1fa22aa2c1e32451f5-0-aaba6c14505b649642d6cef5cb838907", link: "#" }
+            ];
+            const { scrollYProgress } = useScroll();
+            const scaleX = useSpring(scrollYProgress);
+            const stats = [
+                { number: 6, suffix: "年+", title: "设计深耕经验", subTitle: "Years of Expertise", description: "6 年 UI/UX 全链路设计沉淀。", color: "text-pill-orange", delay: 0.1 },
+                { number: 30, suffix: "%", title: "核心转化提升", subTitle: "Conversion Growth", description: "咨询转化率提升30%。", color: "text-pill-blue", delay: 0.2 },
+                { number: 100, suffix: "%", title: "AI输出效率提升", subTitle: "AI Workflow", description: "AI驱动视觉提效 100%。", color: "text-pill-green", delay: 0.3 }
+            ];
+
+            return (
+                <div className="relative min-h-screen">
+                    <Navbar />
+                    <motion.div className="fixed top-0 left-0 right-0 h-1 bg-pill-orange z-[100] origin-left" style={{ scaleX }} />
+                    <main className="pt-20">
+                        <Hero />
+                        <section id="projects"><MastergoProjects projects={projects} /></section>
+                        <section id="about" className="py-16 text-center max-w-5xl mx-auto px-6 relative">
+                            <h2 className="text-3xl md:text-5xl font-black text-ink mb-12">About <span className="pill-highlight text-pill-orange">Me</span></h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><{stats.map(s => <StatItem key={s.title} {...s} />)}</div>
+                            <Experience />
+                        </section>
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
